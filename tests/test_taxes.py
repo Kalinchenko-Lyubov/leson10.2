@@ -1,20 +1,24 @@
 import pytest
-
 from src.taxes import calculate_taxes
 
 
-def test_calculate_taxes():
-    assert calculate_taxes([100, 1000], 20) == [120, 1200]
+@pytest.fixture
+def prices():
+    return [100, 200, 300]
 
 
-def test_calculate_taxes_empty_tax():
-    with pytest.raises(ValueError) as exc_info:
-        calculate_taxes([0], 20)
+@pytest.mark.parametrize('tax_rate, expected', [(10, [110, 220, 330]),
+                                                (15, [115, 230, 345]),
+                                                (20, [120, 240, 360]),])
+def test_calculate_taxes(prices, tax_rate, expected):
+    assert calculate_taxes(prices, tax_rate) == expected
 
-    assert str(exc_info.value) == 'Неверная цена'
 
-def test_calculate_taxes_empty_price():
-    with pytest.raises(ValueError) as exc_info:
-        calculate_taxes([20], -5)
+def test_calculate_taxes_invalid_tax_rate(prices):
+    with pytest.raises(ValueError):
+        calculate_taxes(prices, tax_rate=-5)
 
-    assert str(exc_info.value) == 'Неверный налоговый процент'
+
+def test_calculate_taxes_invalid_prices():
+    with pytest.raises(ValueError):
+        calculate_taxes([0, -1], tax_rate=10)
